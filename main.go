@@ -39,8 +39,8 @@ const (
 // This really just exists as a minimal demonstration of the interface graval
 // drivers are required to implement.
 type S3Driver struct {
-	S3       *s3.S3
-	CacheDir string
+	CacheDir    string
+	UploadQueue chan string
 }
 
 func (driver *S3Driver) Authenticate(user string, pass string) bool {
@@ -83,26 +83,31 @@ func (driver *S3Driver) PutFile(destPath string, data io.Reader) bool {
 	outFile := filepath.Join(outDir, fileName)
 
 	if err := os.MkdirAll(outDir, 0755); err != nil {
-		fmt.Printf("Error making out dir %s", err)
+		log.Printf("Error making out dir %s\b", err)
 		return false
 	}
 
 	f, err := os.Create(outFile)
 	if err != nil {
-		fmt.Printf("Error creating out file %s", err)
+		log.Printf("Error creating out file %s\n", err)
 		return false
 	}
 
 	defer func() { f.Close() }()
 
-	fmt.Printf("Writing to %s\n", outFile)
+	log.Printf("Writing to %s\n", outFile)
 
-	if err := io.Copy(f, data); err != nil {
-		fmt.Printf("Error copying to file %s", err)
+	if _, err := io.Copy(f, data); err != nil {
+		log.Printf("Error copying to file %s\n", err)
 		return false
 	}
 
 	// Message the s3 uploader to move it to S3.
+	select {
+	case driver.UploadQueue <- destPath:
+	default:
+		log.Printf("Queue full, skipping upload of %s\n", destPath)
+	}
 
 	return true
 }
@@ -111,16 +116,14 @@ func (driver *S3Driver) PutFile(destPath string, data io.Reader) bool {
 // client connection. Generally the factory will be fairly minimal. This is
 // a good place to read any required config for your driver.
 type S3DriverFactory struct {
-	CacheDir string
+	CacheDir    string
+	UploadQueue chan string
 }
 
 func (factory *S3DriverFactory) NewDriver() (graval.FTPDriver, error) {
-	sess := session.New(&aws.Config{Region: aws.String("us-east-1")})
-	svc := s3.New(sess)
-
 	return &S3Driver{
-		S3:       svc,
-		CacheDir: factory.CacheDir,
+		CacheDir:    factory.CacheDir,
+		UploadQueue: factory.UploadQueue,
 	}, nil
 }
 
@@ -131,9 +134,38 @@ func main() {
 		fmt.Println("Set FTP2S3_CACHE_DIR")
 		os.Exit(1)
 	}
-	factory := &S3DriverFactory{
-		CacheDir: cacheDir,
+
+	bucket := os.Getenv("FTP2S3_BUCKET")
+	if bucket == "" {
+		fmt.Println("Set FTP2S3_BUCKET")
+		os.Exit(1)
 	}
+
+	prefix := os.Getenv("FTP2S3_PREFIX")
+	if prefix == "" {
+		fmt.Println("Set FTP2S3_PREFIX to the prefix you want to store in on S3")
+		os.Exit(1)
+	}
+
+	fileQueue := make(chan string, 10000)
+
+	sess := session.New(&aws.Config{Region: aws.String("us-east-1")})
+	svc := s3.New(sess)
+
+	uploader := &S3Uploader{
+		S3:       svc,
+		CacheDir: cacheDir,
+		S3Bucket: bucket,
+		S3Prefix: prefix,
+	}
+
+	go uploader.UploadLoop(fileQueue)
+
+	factory := &S3DriverFactory{
+		CacheDir:    cacheDir,
+		UploadQueue: fileQueue,
+	}
+
 	ftpServer := graval.NewFTPServer(&graval.FTPServerOpts{
 		Factory: factory,
 		//Hostname: "0.0.0.0",
