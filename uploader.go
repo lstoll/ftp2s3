@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -26,11 +27,29 @@ func (s *S3Uploader) UploadLoop(queue chan string) {
 	}
 }
 
+// Walk path, upload what's still there.
+func (s *S3Uploader) Reconcile() {
+	filepath.Walk(s.CacheDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Println("Walking error", err)
+			return err
+		}
+
+		path = path[len(s.CacheDir):]
+
+		if !info.IsDir() && info.ModTime().Before(time.Now().Add(-10*time.Minute)) {
+			s.uploadToS3(path)
+		}
+
+		return nil
+	})
+}
+
 func (s *S3Uploader) uploadToS3(path string) {
 	fullPath := filepath.Join(s.CacheDir, path)
 	file, err := os.Open(fullPath)
 	if err != nil {
-		log.Fatal("Failed to open file", err)
+		log.Println("Failed to open file", err)
 		return
 	}
 
@@ -40,13 +59,13 @@ func (s *S3Uploader) uploadToS3(path string) {
 		Body:   file,
 	})
 	if err != nil {
-		log.Fatal("Failed to upload file to S3", err)
+		log.Println("Failed to upload file to S3", err)
 		return
 	}
 
 	err = os.Remove(fullPath)
 	if err != nil {
-		log.Fatal("Failed to remove file", err)
+		log.Println("Failed to remove file", err)
 		return
 	}
 

@@ -161,6 +161,11 @@ func main() {
 
 	go uploader.UploadLoop(fileQueue)
 
+	go func() {
+		uploader.Reconcile()
+		time.Sleep(30 * time.Minute)
+	}()
+
 	factory := &S3DriverFactory{
 		CacheDir:    cacheDir,
 		UploadQueue: fileQueue,
