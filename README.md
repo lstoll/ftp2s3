@@ -1,6 +1,6 @@
 # ftp2s3
 
-FTP Server that uploads to data. Not general purpose, designed to be the bare minimum to get data from D-Link camera's offsite.
+FTP Server that uploads to data. Not general purpose, designed to be the bare minimum to get data from D-Link cameras offsite.
 
 ## Using
 
@@ -12,6 +12,10 @@ Set up the following env:
 * `AWS_SECRET_ACCESS_KEY`
 * `FTP2S3_BUCKET`
 * `FTP2S3_PREFIX` prefix inside the bucket to store uploads
+* `FTP2S3_USERNAME` ftp username
+* `FTP2S3_PASSWORD` ftp password
+* `FTP2S3_PORT` (optional) port to listen on, default is 2121
+
 
 Also set up your camera like this:
 

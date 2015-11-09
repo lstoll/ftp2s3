@@ -20,6 +20,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,10 +42,12 @@ const (
 type S3Driver struct {
 	CacheDir    string
 	UploadQueue chan string
+	Username    string
+	Password    string
 }
 
 func (driver *S3Driver) Authenticate(user string, pass string) bool {
-	return user == "test" && pass == "1234"
+	return user == driver.Username && pass == driver.Password
 }
 func (driver *S3Driver) Bytes(path string) (bytes int) {
 	return -1
@@ -118,12 +121,16 @@ func (driver *S3Driver) PutFile(destPath string, data io.Reader) bool {
 type S3DriverFactory struct {
 	CacheDir    string
 	UploadQueue chan string
+	Username    string
+	Password    string
 }
 
 func (factory *S3DriverFactory) NewDriver() (graval.FTPDriver, error) {
 	return &S3Driver{
 		CacheDir:    factory.CacheDir,
 		UploadQueue: factory.UploadQueue,
+		Username:    factory.Username,
+		Password:    factory.Password,
 	}, nil
 }
 
@@ -147,9 +154,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	username := os.Getenv("FTP2S3_USERNAME")
+	if username == "" {
+		fmt.Println("Set FTP2S3_USERNAME")
+		os.Exit(1)
+	}
+
+	password := os.Getenv("FTP2S3_PASSWORD")
+	if password == "" {
+		fmt.Println("Set FTP2S3_PASSWORD")
+		os.Exit(1)
+	}
+
+	region := os.Getenv("FTP2S3_REGION")
+	if region == "" {
+		region = "us-east-1"
+	}
+
+	port := os.Getenv("FTP2S3_PORT")
+	if port == "" {
+		port = "2121"
+	}
+
+	portInt, err := strconv.Atoi(port)
+	if err != nil {
+		log.Fatal("Port must be numeric ", err)
+	}
+
 	fileQueue := make(chan string, 10000)
 
-	sess := session.New(&aws.Config{Region: aws.String("us-east-1")})
+	sess := session.New(&aws.Config{Region: aws.String(region)})
 	svc := s3.New(sess)
 
 	uploader := &S3Uploader{
@@ -169,14 +203,16 @@ func main() {
 	factory := &S3DriverFactory{
 		CacheDir:    cacheDir,
 		UploadQueue: fileQueue,
+		Username:    username,
+		Password:    password,
 	}
 
 	ftpServer := graval.NewFTPServer(&graval.FTPServerOpts{
 		Factory: factory,
 		//Hostname: "0.0.0.0",
-		Port: 2121,
+		Port: portInt,
 	})
-	err := ftpServer.ListenAndServe()
+	err = ftpServer.ListenAndServe()
 	if err != nil {
 		log.Print(err)
 		log.Fatal("Error starting server!")
