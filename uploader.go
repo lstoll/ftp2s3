@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"mime"
 	"os"
 	"path/filepath"
 	"time"
@@ -53,10 +54,14 @@ func (s *S3Uploader) uploadToS3(path string) {
 		return
 	}
 
+	ext := filepath.Ext(path)
+	contentType := mime.TypeByExtension(ext)
+
 	_, err = s.S3.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(s.S3Bucket),
-		Key:    aws.String(s.S3Prefix + "/" + path),
-		Body:   file,
+		Bucket:      aws.String(s.S3Bucket),
+		Key:         aws.String(s.S3Prefix + "/" + path),
+		Body:        file,
+		ContentType: aws.String(contentType),
 	})
 	if err != nil {
 		log.Println("Failed to upload file to S3", err)
