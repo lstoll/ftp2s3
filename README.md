@@ -4,7 +4,7 @@ FTP Server that uploads to data. Not general purpose, designed to be the bare mi
 
 ## Using
 
-There's a docker container at ``
+There's a docker container `docker pull lstoll/ftp2s3`
 
 Set up the following env:
 
