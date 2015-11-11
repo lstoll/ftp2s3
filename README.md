@@ -8,10 +8,10 @@ There's a docker container `docker pull lstoll/ftp2s3`
 
 Alternatively you can fetch binaries:
 
-Linux/arm: http://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_linux_arm
-Linux/386: http://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_linux_386
-Linux/amd64: http://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_linux_amd64
-Darwin/amd64: http://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_darwin_amd64
+Linux/arm: https://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_linux_arm
+Linux/386: https://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_linux_386
+Linux/amd64: https://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_linux_amd64
+Darwin/amd64: https://cdn.lstoll.net/artifacts/ftp2s3/ftp2s3_darwin_amd64
 
 
 Set up the following env:
