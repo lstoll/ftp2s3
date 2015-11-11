@@ -1,0 +1,17 @@
+language: go
+go:
+- 1.5
+script: script/cibuild
+deploy:
+  provider: s3
+  access_key_id: AKIAJ2DNU6HBV7RKQXUA
+  bucket: s3.lstoll.net
+  local_dir: out
+  upload_dir: artifacts/ftp2s3
+  acl: public_read
+  skip_cleanup: true
+  on:
+    repo: lstoll/ftp2s3
+    branch: master
+  secret_access_key:
+    secure: hsS1vb2nGw9dk+El4RZ22Ep8guOQKflfVoouwe5FM5ZvL1mq8T1fRUbaL5wkGAEWT7HtYWluqb9iXFnCLm0n9NLDZQgHYljH+rqLnajFAuzjF8RDj7/Bwc6hi/gSRKi8kBHEC6s7q0sfM4vOBeBYjs/bGIOCITLT/70wTLJRWKKSjFERwXgpgjuDcQ6G712C1csLcTkXtHknYlQQHkpTzhApe8/ute0q3cPfnuguIgzwIn79DN3KiIY6zkEL3pYlrV3le+l7tFp4XF08QLw+ksnqI5jYy/cQQeB7Nim7Az3r8y3X7ei3YATeZzRbHd+m2s2W3mqhEZVroaUlBewIyb6cAatNiPU/TGJLTHzLiIzhda5pelgOG0FaGRlUxb5C+ZP2vriNnYP2Aq7cD+yBho9xQxzKXbJWt8PF0sAuDs1j0MGtP3OyF5AKpmWxy1LHXzaVkfm1yd5Va/dO/QUd8uXJcf1fPRErlXwEshQeZmz74QjnRohbJZrz6vNf0xpKS3ZQEpbaZNyxQ08KY//LTIQMXJ83r2cjM9lHOPt3YS3cD1bHVN4GT/7b4pLOKoV9NBk8yTWybac58KjxLRuOj9g3sYLhaSlfRAPAmYJMaynxCDq0xNru7wDJvRxhySeaYdrncJSH8JlbFVZJq5FQS1YT0N/Ov1CMcx5pkZ4pDg4=
