@@ -19,6 +19,7 @@ Set up the following env:
 * `AWS_ACCESS_KEY_ID`
 * `AWS_SECRET_ACCESS_KEY`
 * `FTP2S3_BUCKET`
+* `FTP2S3_REGION` (optional) AWS S3 region, default is us-west-1
 * `FTP2S3_PREFIX` prefix inside the bucket to store uploads
 * `FTP2S3_USERNAME` ftp username
 * `FTP2S3_PASSWORD` ftp password
