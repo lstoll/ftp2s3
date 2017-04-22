@@ -221,6 +221,9 @@ func main() {
 	}
 }
 
+// TODO - pass this through to the PASV code. There's a hacked in version in
+// vendor, but doing it properly would be better
+
 func GetOutboundIP() string {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
